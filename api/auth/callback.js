@@ -74,7 +74,7 @@ export default apiHandler(async (req, res) => {
   const token = signSession(sessionData);
 
   res.setHeader('Set-Cookie',
-    `eh_session=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`
+    `eh_session=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=None; Secure; Max-Age=86400`
   );
 
   return res.redirect(`${FRONT}/dashboard?login=success`);
