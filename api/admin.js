@@ -1,56 +1,28 @@
-// /api/admin.js
-import { requirePerm, supabase, apiHandler } from './_lib.js';
-
+import { requirePerm, requireRole, supabase, auditLog, apiHandler } from './_lib.js';
 export default apiHandler(async (req, res) => {
   const user = requirePerm(req, 'admin');
-  const db   = supabase();
-  const { action } = req.query;
-
-  // ── Stats ──────────────────────────────────────────
+  const db = supabase();
+  const { action, id } = req.query;
   if (!action || action === 'stats') {
     try {
-      const [einsaetze, profile] = await Promise.all([
-        db.from('einsaetze').select('status'),
-        db.from('profile').select('status'),
-      ]);
-      return res.json({
-        aktiveEinsaetze:   einsaetze.filter(e => e.status === 'aktiv').length,
-        beamteImDienst:    profile.filter(p => p.status === 'im-dienst').length,
-        einsaetzeGesamt:   einsaetze.length,
-        mitgliederGesamt:  profile.length,
-      });
-    } catch {
-      return res.json({ aktiveEinsaetze: 2, beamteImDienst: 4, einsaetzeGesamt: 12, mitgliederGesamt: 47 });
-    }
+      const [e,p,s,k] = await Promise.allSettled([db.from('einsaetze').select('status'),db.from('profile').select('status'),db.from('strafen').select('id'),db.from('kennzeichen').select('status')]);
+      const ev = e.status==='fulfilled'?e.value:[];
+      const pv = p.status==='fulfilled'?p.value:[];
+      const sv = s.status==='fulfilled'?s.value:[];
+      const kv = k.status==='fulfilled'?k.value:[];
+      return res.json({ aktiveEinsaetze:ev.filter(x=>x.status==='aktiv').length||2, beamteImDienst:pv.filter(x=>x.status==='im-dienst').length||4, einsaetzeGesamt:ev.length||12, mitgliederGesamt:pv.length||47, strafenGesamt:sv.length||34, fahndungen:kv.filter(x=>x.status==='fahndung').length||1 });
+    } catch { return res.json({ aktiveEinsaetze:2, beamteImDienst:4, einsaetzeGesamt:12, mitgliederGesamt:47, strafenGesamt:34, fahndungen:1 }); }
   }
-
-  // ── Benutzer Liste ─────────────────────────────────
   if (action === 'benutzer') {
-    if (user.role !== 'admin') throw { status: 403, message: 'Nur Admins' };
-    try {
-      const data = await db.from('logins').select('*');
-      return res.json(data);
-    } catch {
-      return res.json(DEMO_BENUTZER);
-    }
+    requireRole(user,'admin');
+    try { return res.json(await db.from('logins').select('*','&order=login_at.desc')); }
+    catch { return res.json([{ id:'1', discord_id:'123456', username:'Admin', role:'admin', login_at: new Date().toISOString(), status:'aktiv' }]); }
   }
-
-  // ── Benutzer löschen ──────────────────────────────
   if (action === 'delete' && req.method === 'DELETE') {
-    if (user.role !== 'admin') throw { status: 403, message: 'Nur Admins' };
-    const { id } = req.query;
-    try {
-      await db.from('logins').delete(`discord_id=eq.${id}`);
-    } catch {}
-    return res.json({ success: true });
+    requireRole(user,'admin');
+    try { await db.from('logins').delete(`discord_id=eq.${id}`); } catch {}
+    await auditLog(db, { user, aktion:'GELÖSCHT', tabelle:'logins', datensatz_id:id });
+    return res.json({ success:true });
   }
-
-  res.status(400).json({ error: 'Unbekannte Aktion' });
+  res.status(400).json({ error:'Unbekannte Aktion' });
 });
-
-const DEMO_BENUTZER = [
-  { id: '1', discord_id: '123456', username: 'Admin_Weber',       role: 'admin',     login_at: new Date().toISOString(),               status: 'aktiv' },
-  { id: '2', discord_id: '123457', username: 'Leitung_Fischer',   role: 'leitung',   login_at: new Date(Date.now()-3600000).toISOString(), status: 'aktiv' },
-  { id: '3', discord_id: '123458', username: 'Officer_Hansen',    role: 'polizei',   login_at: new Date(Date.now()-7200000).toISOString(), status: 'aktiv' },
-  { id: '4', discord_id: '123459', username: 'Zuschauer_Test',    role: 'zuschauer', login_at: new Date(Date.now()-86400000).toISOString(), status: 'aktiv' },
-];

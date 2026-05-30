@@ -1,0 +1,18 @@
+.modal-backdrop { position:fixed;inset:0;background:rgba(2,5,8,.85);z-index:1000;display:flex;align-items:center;justify-content:center;animation:fadeIn .2s ease;padding:16px; }
+.modal-box { background:var(--bg-3);border:1px solid var(--border-md);border-radius:var(--r4);width:100%;max-width:440px;box-shadow:0 24px 60px rgba(0,0,0,.6),0 0 0 1px var(--border);animation:fadeUp .25s ease; }
+.modal-hd { display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);font-family:var(--ff-display);font-size:16px;font-weight:600;letter-spacing:.04em; }
+.modal-close { background:none;border:none;color:var(--t3);font-size:16px;cursor:pointer;padding:4px;transition:color .14s; }
+.modal-close:hover { color:var(--t1); }
+.modal-body { padding:20px;display:flex;flex-direction:column;gap:14px; }
+.modal-field { display:flex;flex-direction:column;gap:5px; }
+.modal-field label { font-family:var(--ff-mono);font-size:10px;letter-spacing:.12em;color:var(--t3);text-transform:uppercase; }
+.modal-field input, .modal-field select { padding:9px 12px;background:var(--bg-4);border:1px solid var(--border);border-radius:var(--r2);color:var(--t1);font-family:var(--ff-ui);font-size:13px;transition:border-color .14s; }
+.modal-field input:focus, .modal-field select:focus { outline:none;border-color:var(--border-hi);box-shadow:0 0 0 2px rgba(10,110,250,.12); }
+.modal-field input::placeholder { color:var(--t3); }
+.modal-field select option { background:var(--bg-3); }
+.modal-actions { display:flex;gap:10px;justify-content:flex-end;margin-top:4px; }
+.btn-cancel { padding:8px 16px;background:transparent;border:1px solid var(--border);border-radius:var(--r2);color:var(--t2);font-size:12px;cursor:pointer;transition:all .14s; }
+.btn-cancel:hover { background:var(--bg-5);color:var(--t1); }
+.btn-save { padding:8px 20px;background:var(--blue);border:none;border-radius:var(--r2);color:#fff;font-size:12px;font-weight:600;cursor:pointer;transition:all .14s;box-shadow:0 2px 10px rgba(10,110,250,.3); }
+.btn-save:hover:not(:disabled) { background:#2080FF; }
+.btn-save:disabled { opacity:.5;cursor:not-allowed; }

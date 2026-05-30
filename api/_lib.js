@@ -8,7 +8,7 @@ export function supabase() {
     const text = await res.text();
     return text ? JSON.parse(text) : [];
   };
-  return { from: (table) => ({ select: (cols='*') => query(`${table}?select=${cols}`), insert: (data) => query(table, { method: 'POST', body: JSON.stringify(data) }), delete: (match) => query(`${table}?${match}`, { method: 'DELETE' }), filter: (col, op, val) => query(`${table}?${col}=${op}.${val}`) }) };
+  return { from: (table) => ({ select: (cols='*',filters='') => query(`${table}?select=${cols}${filters}`), insert: (data) => query(table, { method: 'POST', body: JSON.stringify(data) }), update: (data, match) => query(`${table}?${match}`, { method: 'PATCH', body: JSON.stringify(data) }), delete: (match) => query(`${table}?${match}`, { method: 'DELETE' }), filter: (col, op, val) => query(`${table}?${col}=${op}.${val}`) }) };
 }
 const SECRET = process.env.JWT_SECRET || 'fallback';
 export function signSession(payload) {
@@ -30,10 +30,13 @@ export function getSessionFromRequest(req) {
   const match = (req.headers.cookie || '').match(/eh_session=([^;]+)/);
   return match ? verifySession(decodeURIComponent(match[1])) : null;
 }
-const PERMISSIONS = { admin: ['einsaetze','profile','strafen','kennzeichen','admin','benutzer','funk'], leitung: ['einsaetze','profile','strafen','kennzeichen','admin','funk'], polizei: ['einsaetze','profile','strafen','kennzeichen','funk'], zuschauer: ['einsaetze_read','profile_read','kennzeichen_read','funk_read'] };
+const PERMISSIONS = { admin: ['einsaetze','profile','strafen','kennzeichen','admin','benutzer','funk','logs'], leitung: ['einsaetze','profile','strafen','kennzeichen','admin','funk','logs'], polizei: ['einsaetze','profile','kennzeichen','funk'], zuschauer: ['einsaetze_read','profile_read','kennzeichen_read','funk_read'] };
 export function hasPermission(user, perm) { if (!user) return false; const perms = PERMISSIONS[user.role] || []; return perms.includes(perm) || perms.includes(perm.replace('_read','')); }
 export function requireAuth(req) { const user = getSessionFromRequest(req); if (!user) throw { status: 401, message: 'Nicht authentifiziert' }; return user; }
 export function requirePerm(req, perm) { const user = requireAuth(req); if (!hasPermission(user, perm)) throw { status: 403, message: 'Zugriff verweigert' }; return user; }
+export function requireRole(user, ...roles) { if (!roles.includes(user.role)) throw { status: 403, message: 'Rolle nicht berechtigt' }; }
 export function resolveRole(memberRoles) { for (const name of ['admin','leitung','polizei','zuschauer']) { const id = process.env[`ROLE_${name.toUpperCase()}`]; if (id && memberRoles.includes(id)) return name; } return null; }
-export function cors(res) { res.setHeader('Access-Control-Allow-Origin','*'); res.setHeader('Access-Control-Allow-Credentials','true'); res.setHeader('Access-Control-Allow-Methods','GET,POST,PUT,DELETE,OPTIONS'); res.setHeader('Access-Control-Allow-Headers','Content-Type'); }
+export async function auditLog(db, { user, aktion, tabelle, datensatz_id, details }) { try { await db.from('audit_log').insert({ user_id: user.id, username: user.username, rolle: user.role, aktion, tabelle, datensatz_id: datensatz_id || null, details: details || null, zeitpunkt: new Date().toISOString() }); } catch(e) { console.error('Audit log error:', e.message); } }
+export async function discordLog(channelId, embed) { const botToken = process.env.DISCORD_BOT_TOKEN; if (!channelId || !botToken) return; try { await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, { method: 'POST', headers: { Authorization: `Bot ${botToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ embeds: [embed] }) }); } catch(e) { console.error('Discord log error:', e.message); } }
+export function cors(res) { res.setHeader('Access-Control-Allow-Origin','*'); res.setHeader('Access-Control-Allow-Credentials','true'); res.setHeader('Access-Control-Allow-Methods','GET,POST,PUT,PATCH,DELETE,OPTIONS'); res.setHeader('Access-Control-Allow-Headers','Content-Type'); }
 export function apiHandler(fn) { return async (req, res) => { cors(res); if (req.method==='OPTIONS') return res.status(200).end(); try { await fn(req, res); } catch(err) { res.status(err.status||500).json({ error: err.message||'Serverfehler' }); } }; }
