@@ -1,0 +1,116 @@
+/* ═══════════════════════════════════════════════════════════
+   Emergency Hamburg v2 — Global Design System
+   Police Tactical Interface · Vercel Edition
+═══════════════════════════════════════════════════════════ */
+:root {
+  --blue:       #0A6EFA;
+  --blue-lo:    #0D3A7A;
+  --blue-glow:  rgba(10,110,250,0.35);
+  --red:        #FF1A2E;
+  --red-glow:   rgba(255,26,46,0.35);
+  --amber:      #FF8C00;
+  --green:      #00E676;
+
+  --bg-0: #020508;
+  --bg-1: #060B12;
+  --bg-2: #0A1220;
+  --bg-3: #0E1828;
+  --bg-4: #131F30;
+  --bg-5: #192638;
+
+  --border:    rgba(10,110,250,0.12);
+  --border-md: rgba(10,110,250,0.28);
+  --border-hi: rgba(10,110,250,0.55);
+
+  --t1: #EAF0FF;
+  --t2: #7A9CC8;
+  --t3: #3D5A7A;
+
+  --ff-display: 'Rajdhani', sans-serif;
+  --ff-ui:      'Exo 2', sans-serif;
+  --ff-mono:    'Share Tech Mono', monospace;
+
+  --r1: 3px; --r2: 6px; --r3: 10px; --r4: 14px;
+}
+
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { font-size:14px; }
+body {
+  font-family: var(--ff-ui);
+  background: var(--bg-0);
+  color: var(--t1);
+  min-height:100vh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:var(--bg-1); }
+::-webkit-scrollbar-thumb { background:var(--border-md); border-radius:2px; }
+::-webkit-scrollbar-thumb:hover { background:var(--blue); }
+
+/* Boot screen */
+.boot-screen {
+  position:fixed; inset:0;
+  background:var(--bg-0);
+  display:flex; align-items:center; justify-content:center;
+  z-index:9999;
+}
+.boot-spinner {
+  width:36px; height:36px;
+  border:2px solid var(--border);
+  border-top-color:var(--blue);
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+
+/* ── Keyframes ── */
+@keyframes spin        { to { transform:rotate(360deg); } }
+@keyframes fadeIn      { from{opacity:0} to{opacity:1} }
+@keyframes fadeUp      { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes slideLeft   { from{opacity:0;transform:translateX(-16px)} to{opacity:1;transform:translateX(0)} }
+@keyframes scanline    { 0%{transform:translateY(-100%)} 100%{transform:translateY(100vh)} }
+@keyframes radarSpin   { to{transform:rotate(360deg)} }
+@keyframes pulseBlue   { 0%,100%{box-shadow:0 0 8px var(--blue-glow)} 50%{box-shadow:0 0 22px var(--blue-glow),0 0 40px rgba(10,110,250,.15)} }
+@keyframes shimmer     { 0%{left:-100%} 60%,100%{left:120%} }
+@keyframes blinkDot    { 0%,100%{opacity:1} 50%{opacity:.2} }
+@keyframes grantPop    { 0%{transform:scale(.75);opacity:0} 60%{transform:scale(1.04)} 100%{transform:scale(1);opacity:1} }
+@keyframes progFill    { from{width:0} to{width:100%} }
+@keyframes flashBlue   {
+  0%,100%{background:transparent}
+  15%,35%{background:radial-gradient(ellipse at 15% 50%,rgba(10,110,250,.14) 0%,transparent 55%)}
+  25%    {background:radial-gradient(ellipse at 15% 50%,rgba(10,110,250,.22) 0%,transparent 55%)}
+}
+@keyframes flashRed {
+  0%,100%{background:transparent}
+  15%,35%{background:radial-gradient(ellipse at 85% 50%,rgba(255,26,46,.10) 0%,transparent 55%)}
+  25%    {background:radial-gradient(ellipse at 85% 50%,rgba(255,26,46,.18) 0%,transparent 55%)}
+}
+
+/* ── Shared Badges ── */
+.badge {
+  display:inline-flex; align-items:center; gap:3px;
+  padding:2px 7px; border-radius:var(--r1);
+  font-family:var(--ff-mono); font-size:10px; font-weight:500;
+  letter-spacing:.06em; text-transform:uppercase;
+  border:1px solid transparent;
+}
+.badge-admin     { background:rgba(255,68,68,.13);  color:#FF7070; border-color:rgba(255,68,68,.28); }
+.badge-leitung   { background:rgba(255,136,0,.13);  color:#FFA040; border-color:rgba(255,136,0,.28); }
+.badge-polizei   { background:rgba(10,110,250,.13); color:#4DAEFF; border-color:rgba(10,110,250,.28); }
+.badge-zuschauer { background:rgba(100,120,150,.13);color:#8AACCC; border-color:rgba(100,120,150,.28); }
+.badge-muted     { background:var(--bg-4); color:var(--t3); border-color:var(--border); }
+
+.sdot {
+  width:8px; height:8px; border-radius:50%; display:inline-block; flex-shrink:0;
+}
+.s-aktiv,
+.s-verfügbar { background:var(--green);  box-shadow:0 0 5px var(--green); }
+.s-wartend,
+.s-bereit    { background:var(--amber);  box-shadow:0 0 5px var(--amber); }
+.s-im-einsatz{ background:var(--red);    box-shadow:0 0 5px var(--red); }
+.s-abgeschlossen,
+.s-unauffällig,
+.s-außer-dienst { background:var(--t3); }
+.s-fahndung,
+.s-gestohlen { background:var(--red); box-shadow:0 0 5px var(--red); animation:blinkDot 1s ease-in-out infinite; }
