@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import './Modal.css'
-export default function Modal({ title, fields, onSave, onClose, saving }) {
+export default function Modal({ title, fields, onSave, onClose, saving, error }) {
   const [form, setForm] = useState(() => { const init = {}; fields.forEach(f => init[f.name] = f.default || ''); return init; })
   const handle = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }))
   const submit = (e) => { e.preventDefault(); onSave(form) }
@@ -9,6 +9,7 @@ export default function Modal({ title, fields, onSave, onClose, saving }) {
       <div className="modal-box" onClick={e => e.stopPropagation()}>
         <div className="modal-hd"><span>{title}</span><button className="modal-close" onClick={onClose}>✕</button></div>
         <form onSubmit={submit} className="modal-body">
+          {error && <div className="modal-error">⚠️ {error}</div>}
           {fields.map(f => (
             <div key={f.name} className="modal-field">
               <label>{f.label}</label>
